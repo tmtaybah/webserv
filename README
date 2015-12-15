@@ -1,0 +1,8 @@
+We only support GET methods, send 501 for any other methods
+
+Requests and arguments should be in the form:
+http://ip.address.of.server:port-number/request&arg1&arg2
+
+Arguments are separated by "&".
+
+Elife wifi password: "12345678" 
