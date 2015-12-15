@@ -100,34 +100,62 @@ void register_signal_handlers()
 //====== Server Request Handelling Functions
 //===========================================================================
 
-void send_header(int socket_fd, char* content_type)
+void send_header(int socket_fd, char* content_type, int no_content_type)
 {
 	char *header = "HTTP/1.1 200 OK\n";
 	write(socket_fd, header, strlen(header));
 
-	char* content_header = "Content-Type: ";
-	write(socket_fd, content_header, strlen(content_header));
-	write(socket_fd, content_type, strlen(content_type));
-	write(socket_fd, "\n\n", strlen("\n\n"));
+	if (no_content_type == 0)
+	{
+		char* content_header = "Content-Type: ";
+		write(socket_fd, content_header, strlen(content_header));
+		write(socket_fd, content_type, strlen(content_type));
+		write(socket_fd, "\n\n", strlen("\n\n"));
+	}
 }
 
 void send_request_error(int socket_fd)
 {
 	char *error = "HTTP/1.1 404 Not Found\n";
+	char* content_header = "Content-Type: text/html\n\n";
 	write(socket_fd, error, strlen(error));
+	write(socket_fd, content_header, strlen(content_header));
+
+	char* start =  "<!DOCTYPE html><html><head></head>";
+	char* body =   "<body><h1>";
+	char* message = "404 Not Found";
+	char* end_body = "</h1></body>";
+
+	write(socket_fd, start, strlen(start));
+	write(socket_fd, body, strlen(body));
+	write(socket_fd, message, strlen(message));
+	write(socket_fd, end_body, strlen(end_body));
+
 }
 
 void send_method_error(int socket_fd)
 {
 	char *error = "HTTP/1.1 501 Not Implemented\n";
+	char* content_header = "Content-Type: text/html\n\n";
 	write(socket_fd, error, strlen(error));
+	write(socket_fd, content_header, strlen(content_header));
+
+	char* start =  "<!DOCTYPE html><html><head></head>";
+	char* body =   "<body><h1>";
+	char* message = "501 Not Implemented";
+	char* end_body = "</h1></body>";
+
+	write(socket_fd, start, strlen(start));
+	write(socket_fd, body, strlen(body));
+	write(socket_fd, message, strlen(message));
+	write(socket_fd, end_body, strlen(end_body));
 }
 
 
 void list_directory(int socket_fd, char* request)
 {
 
-	fprintf(stderr, "LISTING DIRECTORIES\n");
+	// fprintf(stderr, "LISTING DIRECTORIES\n");
 	char* start =  "<!DOCTYPE html><html><head></head>";
 	char* body =   "<body> <h1>Index of ";
 	char * part2 = "</h1><table>";
@@ -138,7 +166,6 @@ void list_directory(int socket_fd, char* request)
 	write(socket_fd, part2, strlen(part2));
 
 	// Traverse Directory
-	//  <td>Eve</td>
 
 	DIR           *d;
 	struct dirent *dir;
@@ -163,9 +190,19 @@ void list_directory(int socket_fd, char* request)
 
 }
 
-void execute_cgi()
+void execute_cgi(int socket_fd, char* command, char** args)
 {
 
+	dup2(socket_fd, 1);
+	close(socket_fd);
+
+	// fprintf(stderr, "COMMAND IS %s\n", command);
+
+	if( execvp(command, args) == -1 )
+	{
+		perror("Exec error");
+		exit(-1);
+	}
 }
 
 void send_file(int socket_fd, char* file_name)
@@ -319,7 +356,7 @@ char* get_next_token(char* line, int start)
 void process_request(int socket_fd, char* http_header)
 {
 	// char* request =
-	fprintf(stderr, "IN PROCESS REQUEST\n");
+	// fprintf(stderr, "IN PROCESS REQUEST\n");
 
 	// Array to hold args
 	char *args[MAX_ARG];
@@ -357,6 +394,7 @@ void process_request(int socket_fd, char* http_header)
 			len = strlen(token);
 			args[arg_count] = malloc(len + 1);
 			strcpy(args[arg_count], token);
+
 			arg_count ++;
 		}
 
@@ -367,12 +405,12 @@ void process_request(int socket_fd, char* http_header)
 
 	}
 
-	args[arg_count + 1] = NULL; // Args has to end in NULL
+	args[arg_count] = NULL; // Args has to end in NULL
 
 	// fprintf(stderr, "DONE WITH LOOP\n");
 	// fprintf(stderr, "ARG COUNT IS %d\n", arg_count);
 	// fprintf(stderr, "Request is %s\n", request);
-
+	//
 	// int i=0;
 	// for(i=0; i <= arg_count; i++)
 	// {
@@ -380,20 +418,19 @@ void process_request(int socket_fd, char* http_header)
 	// }
 
 	int valid = verify_request(socket_fd, request);
-	fprintf(stderr, "VALID REQUEST? %d\n", valid);
+	// fprintf(stderr, "VALID REQUEST? %d\n", valid);
 
 	if(valid == 1)
 	{
 		char* extension = get_extension(request);
-		fprintf(stderr, "EXTENSION IS %s\n", extension);
+		// fprintf(stderr, "EXTENSION IS %s\n", extension);
 
 		char* type = get_content_type(extension);
-		fprintf(stderr, "CONTENT TYPE  IS %s\n", type);
-
-		send_header(socket_fd, type);
+		// fprintf(stderr, "CONTENT TYPE  IS %s\n", type);
 
 		if(extension == NULL)
 		{
+			send_header(socket_fd, type, 0);
 			if (strlen(request) == 0)
 			{
 				list_directory(socket_fd, ".");
@@ -406,14 +443,18 @@ void process_request(int socket_fd, char* http_header)
 
 		if(strstr(file_extensions, extension) != NULL)
 		{
+			send_header(socket_fd, type, 0);
 			send_file(socket_fd, request);
 		}
-
-
+		else if(strstr(extension, ".cgi"))
+		{
+			send_header(socket_fd, type, 1);
+			execute_cgi(socket_fd, request, args);
+		}
 
 	}
 
-	fprintf(stderr, "DONE WITH PROCESSING\n");
+	// fprintf(stderr, "DONE WITH PROCESSING\n");
 
 }
 
