@@ -10,7 +10,7 @@
 
 
 /*
-* Adapted form http://chrisheydrick.com/2012/06/17/how-to-read-serial-data-from-an-arduino-in-linux-with-c-part-3/
+* Adapted form http://todbot.com/blog/2006/12/06/arduino-serial-c-code-to-talk-to-arduino/
 * And the sample code provided by the professor
 */
 
@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
   /* Open the file descriptor in non-blocking mode */
   if ((fd = open(portname, O_RDWR | O_NONBLOCK)) == -1)
   {
-    perror("Error");
+    printf("Couldn't open Arudino");
     exit(-1);
   }
 
@@ -83,7 +83,6 @@ int main(int argc, char *argv[])
   //----------------------------------------
   //----- Setup Control Flags
   //----------------------------------------
-
 
   // 8N1
   toptions.c_cflag &= ~PARENB;
@@ -132,13 +131,13 @@ int main(int argc, char *argv[])
   tcsetattr(fd, TCSANOW, &toptions);
 
   if( tcsetattr(fd, TCSAFLUSH, &toptions) < 0) {
-    perror("init_serialport: Couldn't set term attributes");
+    printf("Couldn't update serical communication attributes.");
     return -1;
   }
 
   sleep(2); //required to make flush work, for some reason
   tcflush(fd, TCIOFLUSH);
-  
+
 
   //===========================================================================
   //====== Send Message
@@ -149,7 +148,7 @@ int main(int argc, char *argv[])
   int w = write(fd, msg, len);
 
   if( w != len ) {
-    perror("serialport_write: couldn't write whole string\n");
+    printf("Couldn't write string.\n");
     return -1;
   }
 

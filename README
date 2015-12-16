@@ -38,6 +38,7 @@ Comments:
 
 Resources:
   - http://chrisheydrick.com/2012/06/17/how-to-read-serial-data-from-an-arduino-in-linux-with-c-part-3/
+  - http://todbot.com/blog/2006/12/06/arduino-serial-c-code-to-talk-to-arduino/
 
 Test Case:
  - http://127.0.0.1:8080/arduino.cgi&Hello,World
