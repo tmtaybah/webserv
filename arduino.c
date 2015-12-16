@@ -57,12 +57,12 @@ int main(int argc, char *argv[])
 
 
   int fd;
-  
+
   /* Open the file descriptor in non-blocking mode */
   if ((fd = open(portname, O_RDWR | O_NOCTTY)) == -1)
   {
-      perror("Error");
-      exit(-1);
+    perror("Error");
+    exit(-1);
   }
 
   /* Set up the control structure */
@@ -83,26 +83,22 @@ int main(int argc, char *argv[])
   //----- Setup Control Flags
   //----------------------------------------
 
-  /* 8 bits, no parity, no stop bits */
+
+  // 8N1
   toptions.c_cflag &= ~PARENB;
   toptions.c_cflag &= ~CSTOPB;
   toptions.c_cflag &= ~CSIZE;
   toptions.c_cflag |= CS8;
-  /* no hardware flow control */
+  // no flow control
   toptions.c_cflag &= ~CRTSCTS;
-  /* enable receiver, ignore status lines */
-  toptions.c_cflag |= CREAD | CLOCAL;
+
+
 
   //----------------------------------------
   //----- Setup Input Flags
   //----------------------------------------
 
-  /* disable input/output flow control, disable restart chars */
-  toptions.c_iflag &= ~(IXON | IXOFF | IXANY);
-  /* disable canonical input, disable echo,
-  disable visually erase chars,
-  disable terminal-generated signals */
-  toptions.c_iflag &= ~(ICANON | ECHOE | ISIG);
+  toptions.c_iflag &= ~(IXON | IXOFF | IXANY); // turn off s/w flow ctrl
 
 
   //----------------------------------------
@@ -115,8 +111,14 @@ int main(int argc, char *argv[])
 
 
   //----------------------------------------
-  //----- Setup Local Flags
+  //----- Setup Local Flags & Others
   //----------------------------------------
+
+  toptions.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG); // make raw
+  toptions.c_cflag |= CREAD | CLOCAL;  // turn on READ & ignore ctrl lines
+
+  toptions.c_cc[VMIN]  = 0;
+  toptions.c_cc[VTIME] = 0;
 
 
 
@@ -127,7 +129,7 @@ int main(int argc, char *argv[])
 
   // Commit options
   tcsetattr(fd, TCSANOW, &toptions);
-
+  
   // Wait for the Arduino to reset
   usleep(1000*1000);
   // Flush anything already in the serial buffer
