@@ -139,6 +139,9 @@ int main(int argc, char *argv[])
   // Wait for the Arduino to reset
   // usleep(1000*1000);
 
+sleep(2); //required to make flush work, for some reason
+tcflush(fd, TCIOFLUSH);
+
 
   //===========================================================================
   //====== Send Message
