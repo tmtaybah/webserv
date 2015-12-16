@@ -18,7 +18,7 @@ char *portname = "/dev/cu.usbmodem1451";
 
 
 // For message
-#define MAX_CHAR 30
+#define MAX_CHAR 50
 char msg[MAX_CHAR]; // Maximum number of character to print out to LCD
 
 
@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
   //===========================================================================
 
 
-  int fd;
+  //int fd
 
   /* Open the file descriptor in non-blocking mode */
   if ((fd = open(portname, O_RDWR | O_NOCTTY);) == -1)
@@ -65,6 +65,7 @@ int main(int argc, char *argv[])
 
   /* Set up the control structure */
   struct termios toptions;
+  int fd;
 
   /* Get currently set options for the tty */
   tcgetattr(fd, &toptions);
