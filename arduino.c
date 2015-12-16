@@ -18,10 +18,9 @@
 // Arudino constants
 char *portname = "/dev/cu.usbmodem1451";
 
-
 // For message
-#define MAX_CHAR 50
-char msg[MAX_CHAR]; // Maximum number of character to print out to LCD
+#define MAX_CHAR 50 // Maximum number of character to print out to LCD
+char* msg;
 
 
 int main(int argc, char *argv[])
@@ -30,6 +29,8 @@ int main(int argc, char *argv[])
   //===========================================================================
   //====== Get Message
   //===========================================================================
+
+  msg = malloc(MAX_CHAR * sizeof(char));
 
   printf("Content-type: text/plain\n\n");
   // Get message to send to arudino
@@ -59,7 +60,7 @@ int main(int argc, char *argv[])
   int fd;
 
   /* Open the file descriptor in non-blocking mode */
-  if ((fd = open(portname, O_RDWR | O_NOCTTY)) == -1)
+  if ((fd = open(portname, O_RDWR | O_NONBLOCK)) == -1)
   {
     perror("Error");
     exit(-1);
@@ -136,7 +137,7 @@ int main(int argc, char *argv[])
   }
 
   // Wait for the Arduino to reset
-  usleep(1000*1000);
+  // usleep(1000*1000);
 
 
   //===========================================================================
