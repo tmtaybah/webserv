@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <string.h>
+#include <errno.h>
 
 
 /*
@@ -17,7 +18,7 @@ char *portname = "/dev/cu.usbmodem1451";
 
 
 // For message
-#define MAX_CHAR 50
+#define MAX_CHAR 30
 char msg[MAX_CHAR]; // Maximum number of character to print out to LCD
 
 
@@ -56,7 +57,11 @@ int main(int argc, char *argv[])
   int fd;
 
   /* Open the file descriptor in non-blocking mode */
-  fd = open(portname, O_RDWR | O_NOCTTY);
+  if ((fd = open(portname, O_RDWR | O_NOCTTY);) == -1)
+  {
+      perror("Error");
+      exit(-1);
+  }
 
   /* Set up the control structure */
   struct termios toptions;

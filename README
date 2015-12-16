@@ -34,7 +34,7 @@ Optional Part
 Comments:
   - Can't handle characters that html escapes like space, quotations, etc...
     in the message
-  - Messages have to be less than 50 characters
+  - Messages have to be less than 30 characters
 
 Resources:
   - http://chrisheydrick.com/2012/06/17/how-to-read-serial-data-from-an-arduino-in-linux-with-c-part-3/
