@@ -129,11 +129,15 @@ int main(int argc, char *argv[])
 
   // Commit options
   tcsetattr(fd, TCSANOW, &toptions);
-  
+
+  if( tcsetattr(fd, TCSAFLUSH, &toptions) < 0) {
+    perror("init_serialport: Couldn't set term attributes");
+    return -1;
+  }
+
   // Wait for the Arduino to reset
   usleep(1000*1000);
-  // Flush anything already in the serial buffer
-  tcflush(fd, TCIFLUSH);
+
 
   //===========================================================================
   //====== Send Message
@@ -146,6 +150,8 @@ int main(int argc, char *argv[])
   close(fd);
 
   printf("Sent \"%s\" to the Arudino", msg);
+
+  fprintf(stderr, "DONE WITH SENDING");
 
   return 0;
 }
