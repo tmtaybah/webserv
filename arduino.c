@@ -136,12 +136,9 @@ int main(int argc, char *argv[])
     return -1;
   }
 
-  // Wait for the Arduino to reset
-  // usleep(1000*1000);
-
-sleep(2); //required to make flush work, for some reason
-tcflush(fd, TCIOFLUSH);
-
+  sleep(2); //required to make flush work, for some reason
+  tcflush(fd, TCIOFLUSH);
+  
 
   //===========================================================================
   //====== Send Message
@@ -154,15 +151,12 @@ tcflush(fd, TCIOFLUSH);
   if( w != len ) {
     perror("serialport_write: couldn't write whole string\n");
     return -1;
-}
-
+  }
 
   // Close serial communication
   close(fd);
 
   printf("Sent \"%s\" to the Arudino", msg);
-
-  fprintf(stderr, "DONE WITH SENDING");
 
   return 0;
 }
