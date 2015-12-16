@@ -1,8 +1,51 @@
-We only support GET methods, send 501 for any other methods
+###############################################################################
+### TEAM = Leen AlShenibr & Tara Taybah
+###############################################################################
 
-Requests and arguments should be in the form:
-http://ip.address.of.server:port-number/request&arg1&arg2
+Compile Instructions:  gcc -o webserv webserv.c
 
-Arguments are separated by "&".
+Or use make file. 
 
-Elife wifi password: "12345678" 
+###############################################################################
+#### General
+###############################################################################
+
+- We only support GET methods, send 501 for any other methods.
+
+- We send 404 Not Found for file types that we don't support, even if the file
+exists.
+
+-  Supported types and extensions = 	".text", ".txt", ".htm", ".html", ".cgi"
+    ".gif", ".jpeg", ".jpg", ".png"
+
+
+###############################################################################
+#### Request Arguments
+###############################################################################
+
+- Arguments are separated by "&".
+- Requests and arguments should be in the form:
+    http://ip.address.of.server:port-number/request&arg1&arg2
+
+- Can't handle characters that html escapes like space, quotations, etc...
+
+
+###############################################################################
+TEST CASES:
+###############################################################################
+
+http://127.0.0.1:8080/my-histogram.cgi&independence.txt&he&we&has&a.d&a&.n
+
+http://127.0.0.1:8080/my-histogram.cgi&independence.txt&he&we&has&a.d
+
+http://127.0.0.1:8080/perl-test.cgi&1&2
+
+http://127.0.0.1:8080/test1.html
+
+http://127.0.0.1:8080/2048.jpg
+
+http://127.0.0.1:8080/img/hi_cat.gif
+
+http://127.0.0.1:8080/independence.txt
+
+###############################################################################

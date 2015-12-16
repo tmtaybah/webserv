@@ -32,17 +32,19 @@ typedef struct {
 
 type_map map_type [] = {
 	{".text", "text/plain"},
+	{".txt", "text/plain"},
 	{".htm", "text/html"},
 	{".html", "text/html"},
 	{".cgi", "text/html"},
 	{".gif", "image/gif"},
 	{".jpeg", "image/jpeg"},
 	{".jpg", "image/jpeg"},
+	{".png", "image/png"},
 	{NULL, NULL},
 };
 
 char* default_content_type = "text/html";
-char* file_extensions = ".html, .text, .gif, .jpeg, .jpg, .htm";
+char* file_extensions = ".html, .text, .gif, .jpeg, .jpg, .htm, .png, .txt";
 
 //===========================================================================
 //====== Signal Handelling
@@ -124,12 +126,15 @@ void send_request_error(int socket_fd)
 	char* start =  "<!DOCTYPE html><html><head></head>";
 	char* body =   "<body><h1>";
 	char* message = "404 Not Found";
-	char* end_body = "</h1></body>";
+	char* end_body = "</h1></body></html>\n";
 
 	write(socket_fd, start, strlen(start));
 	write(socket_fd, body, strlen(body));
 	write(socket_fd, message, strlen(message));
 	write(socket_fd, end_body, strlen(end_body));
+
+
+	close(socket_fd);
 
 }
 
@@ -143,12 +148,14 @@ void send_method_error(int socket_fd)
 	char* start =  "<!DOCTYPE html><html><head></head>";
 	char* body =   "<body><h1>";
 	char* message = "501 Not Implemented";
-	char* end_body = "</h1></body>";
+	char* end_body = "</h1></body></html>\n";
 
 	write(socket_fd, start, strlen(start));
 	write(socket_fd, body, strlen(body));
 	write(socket_fd, message, strlen(message));
 	write(socket_fd, end_body, strlen(end_body));
+
+	close(socket_fd);
 }
 
 
@@ -177,7 +184,7 @@ void list_directory(int socket_fd, char* request)
 			write(socket_fd, "<tr><td>", strlen("<tr><td>"));
 			write(socket_fd, "<a href=\"", strlen("<a href=\""));
 			write(socket_fd, dir->d_name, strlen(dir->d_name));
-			write(socket_fd, "</a>", strlen("</a>"));
+			write(socket_fd, "\"</a>", strlen("\"</a>"));
 			write(socket_fd, dir->d_name, strlen(dir->d_name));
 			write(socket_fd, "</td></tr>", strlen("</td></tr>"));
 		}
@@ -188,6 +195,7 @@ void list_directory(int socket_fd, char* request)
 	char *end = "</table></body></html>";
 	write(socket_fd, end, strlen(end));
 
+	close(socket_fd);
 }
 
 void execute_cgi(int socket_fd, char* command, char** args)
@@ -203,6 +211,8 @@ void execute_cgi(int socket_fd, char* command, char** args)
 		perror("Exec error");
 		exit(-1);
 	}
+
+	close(socket_fd);
 }
 
 void send_file(int socket_fd, char* file_name)
@@ -226,8 +236,13 @@ void send_file(int socket_fd, char* file_name)
 		{
 			write(socket_fd, buff, bytes_read);
 		}
+		else{
+				close(socket_fd);
+				return;
+		}
 
 	}
+
 
 }
 
@@ -355,9 +370,6 @@ char* get_next_token(char* line, int start)
 */
 void process_request(int socket_fd, char* http_header)
 {
-	// char* request =
-	// fprintf(stderr, "IN PROCESS REQUEST\n");
-
 	// Array to hold args
 	char *args[MAX_ARG];
 	char *request;
@@ -407,26 +419,12 @@ void process_request(int socket_fd, char* http_header)
 
 	args[arg_count] = NULL; // Args has to end in NULL
 
-	// fprintf(stderr, "DONE WITH LOOP\n");
-	// fprintf(stderr, "ARG COUNT IS %d\n", arg_count);
-	// fprintf(stderr, "Request is %s\n", request);
-	//
-	// int i=0;
-	// for(i=0; i <= arg_count; i++)
-	// {
-	// 	fprintf(stderr, "Arg %d is %s\n", i, args[i]);
-	// }
-
 	int valid = verify_request(socket_fd, request);
-	// fprintf(stderr, "VALID REQUEST? %d\n", valid);
 
 	if(valid == 1)
 	{
 		char* extension = get_extension(request);
-		// fprintf(stderr, "EXTENSION IS %s\n", extension);
-
 		char* type = get_content_type(extension);
-		// fprintf(stderr, "CONTENT TYPE  IS %s\n", type);
 
 		if(extension == NULL)
 		{
@@ -441,20 +439,31 @@ void process_request(int socket_fd, char* http_header)
 			}
 		}
 
+		// Check if valid extension
 		if(strstr(file_extensions, extension) != NULL)
 		{
 			send_header(socket_fd, type, 0);
 			send_file(socket_fd, request);
 		}
+		// Check if CGI
 		else if(strstr(extension, ".cgi"))
 		{
 			send_header(socket_fd, type, 1);
 			execute_cgi(socket_fd, request, args);
 		}
+		// Send error if not valid or CGI
+		else
+		{
+			send_request_error(socket_fd);
+		}
 
 	}
+	else
+	{
+		send_request_error(socket_fd);
+	}
 
-	// fprintf(stderr, "DONE WITH PROCESSING\n");
+	close(socket_fd);
 
 }
 
@@ -513,7 +522,6 @@ void start_server (int port)
 
 
 	char http_get_buffer[GET_BUFFER];
-	// char* http_get_buffer = malloc(GET_BUFFER);
 
 	// Keep accepting connections
 	while(1)
@@ -525,14 +533,11 @@ void start_server (int port)
 			continue;
 		}
 
-		printf("Server: Got connection from %s\n", inet_ntoa(client_addr.sin_addr));
-		printf("ON SOCKET %d\n", new_fd);
-
-		/* this is the child process */
+		//  Child
 		if(fork() == 0)
 		{
 
-			/* child doesn’t need the listener */
+			//child doesn’t need the listener
 			close(sockfd);
 
 			recv(new_fd, http_get_buffer, GET_BUFFER, 0);
@@ -541,13 +546,9 @@ void start_server (int port)
 			close(new_fd);
 			exit(0);
 		}
-		else{
-			printf("Server-send is OK...!\n");
-		}
 
-		/* parent doesn’t need this*/
+		// Parent doesn’t need this
 		close(new_fd);
-		printf("Server-new socket, new_fd closed successfully...\n");
 
 	} // End While
 
