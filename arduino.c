@@ -5,6 +5,8 @@
 #include <termios.h>
 #include <string.h>
 #include <errno.h>
+#include <unistd.h>
+
 
 
 /*
@@ -54,10 +56,10 @@ int main(int argc, char *argv[])
   //===========================================================================
 
 
-  //int fd
-
+  int fd;
+  
   /* Open the file descriptor in non-blocking mode */
-  if ((fd = open(portname, O_RDWR | O_NOCTTY);) == -1)
+  if ((fd = open(portname, O_RDWR | O_NOCTTY)) == -1)
   {
       perror("Error");
       exit(-1);
@@ -65,7 +67,6 @@ int main(int argc, char *argv[])
 
   /* Set up the control structure */
   struct termios toptions;
-  int fd;
 
   /* Get currently set options for the tty */
   tcgetattr(fd, &toptions);
