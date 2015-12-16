@@ -145,7 +145,14 @@ int main(int argc, char *argv[])
   //===========================================================================
 
   // Write message
-  int w = write(fd, msg, strlen(msg));
+  int len = strlen(msg);
+  int w = write(fd, msg, len);
+
+  if( w != len ) {
+    perror("serialport_write: couldn't write whole string\n");
+    return -1;
+}
+
 
   // Close serial communication
   close(fd);
