@@ -2,9 +2,7 @@
 ### TEAM = Leen AlShenibr & Tara Taybah
 ###############################################################################
 
-Compile Instructions:  gcc -o webserv webserv.c
-
-Or use make file.
+Compile Instructions:  Use makefile
 
 ###############################################################################
 #### General
@@ -28,6 +26,21 @@ exists.
     http://ip.address.of.server:port-number/request&arg1&arg2
 
 - Can't handle characters that html escapes like space, quotations, etc...
+
+###############################################################################
+Optional Part
+###############################################################################
+
+Comments:
+  - Can't handle characters that html escapes like space, quotations, etc...
+    in the message
+  - Messages have to be less than 50 characters
+
+Resources:
+  - http://chrisheydrick.com/2012/06/17/how-to-read-serial-data-from-an-arduino-in-linux-with-c-part-3/
+
+Test Case:
+ - http://127.0.0.1:8080/arduino.cgi&Hello,World
 
 
 ###############################################################################
